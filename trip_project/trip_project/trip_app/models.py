@@ -13,6 +13,7 @@ class User(AbstractBaseUser):
     mobile = models.CharField(max_length=20, db_column="mobile")
     last_login = models.DateTimeField(db_column="last_login", auto_now_add=True)
     is_active = models.BooleanField(default=False, db_column="isActive")
+    profile_image = models.FileField(blank=True, null=True,upload_to='profile')
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

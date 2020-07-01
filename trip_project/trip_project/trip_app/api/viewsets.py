@@ -9,6 +9,12 @@ from trip_project.trip_app.models import User
 from trip_project.trip_app.api.serializers import UserSerializer
 from validate_email import validate_email
 
+
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.viewsets import ModelViewSet
+from trip_project.trip_app.models import User
+from trip_project.trip_app.api.serializers import UserSerializer
+
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
@@ -104,3 +110,20 @@ class AuthenticationViewset(viewsets.ViewSet):
             
             return Response({"message": "success logged"})
         return Response({"message": "success"})
+
+
+class FileUploadViewSet(viewsets.ViewSet):
+    
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    parser_classes = (MultiPartParser, FormParser,)
+
+    @action(methods=["post"], detail=False)
+    def perform_create(self, serializer):
+        print(self.request.data)
+        user = self.request.user
+        print(user)
+        user.profile_image = self.request.data.get('datafile')
+        user.save()
+        serializer = UserSerializer(user)
+        return Response(serializer.data)

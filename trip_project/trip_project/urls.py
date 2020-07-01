@@ -15,5 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from trip_project.trip_app import urls as trip_app_urls
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [url("", include(trip_app_urls))]
+
+if settings.DEBUG:
+  urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
