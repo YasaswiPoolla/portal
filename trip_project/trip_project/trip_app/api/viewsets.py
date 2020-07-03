@@ -1,3 +1,4 @@
+import datetime
 from rest_framework import status,viewsets
 from django.contrib.auth import authenticate, get_user_model
 from django.views.decorators.csrf import csrf_exempt
@@ -12,8 +13,11 @@ from validate_email import validate_email
 
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.viewsets import ModelViewSet
-from trip_project.trip_app.models import User
-from trip_project.trip_app.api.serializers import UserSerializer
+from trip_project.trip_app.models import User, Trips
+from trip_project.trip_app.api.serializers import UserSerializer, TripSerializer
+
+
+from trip_project.trip_app.api.BaseViewset import BaseFilterablePaginatedViewset
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -122,8 +126,30 @@ class FileUploadViewSet(viewsets.ViewSet):
     def perform_create(self, serializer):
         print(self.request.data)
         user = self.request.user
-        print(user)
         user.profile_image = self.request.data.get('datafile')
         user.save()
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+
+
+class TripViewSet(BaseFilterablePaginatedViewset):
+    queryset = Trips.objects.all()
+    serializer_class = TripSerializer
+    model = Trips
+    columns_to_display = [
+    ]
+    filter_only_columns = []
+    date_column = "trip_date"
+    db_date_column = "tripdate"
+    date_type = "datetime"
+    columns_with_text_filter = BaseFilterablePaginatedViewset.columns_with_text_filter + [
+        "from_location",
+        "to_location",
+    ]
+    date_input_format = "dd-MM-yyyy HH:mm:ss"
+    default_start_date = (
+        (datetime.datetime.now() - datetime.timedelta(days=3650))
+        .replace(hour=0, minute=0, second=0, microsecond=0)
+        .date()
+    )
