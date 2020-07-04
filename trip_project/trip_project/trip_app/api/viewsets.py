@@ -1,4 +1,6 @@
 import datetime
+from isoweek import Week
+from django.db.models import Count
 from rest_framework import status,viewsets
 from django.contrib.auth import authenticate, get_user_model
 from django.views.decorators.csrf import csrf_exempt
@@ -133,7 +135,7 @@ class FileUploadViewSet(viewsets.ViewSet):
 
 
 
-class TripViewSet(BaseFilterablePaginatedViewset):
+class TripListViewSet(BaseFilterablePaginatedViewset):
     queryset = Trips.objects.all()
     serializer_class = TripSerializer
     model = Trips
@@ -153,3 +155,38 @@ class TripViewSet(BaseFilterablePaginatedViewset):
         .replace(hour=0, minute=0, second=0, microsecond=0)
         .date()
     )
+
+
+class TripViewSet(BaseFilterablePaginatedViewset):
+    queryset = Trips.objects.all()
+    serializer_class = TripSerializer
+    model = Trips
+
+    @action(methods=["get"], detail=False, url_path="week_trips_count")
+    def week_trips_count(self, request):
+        trips = self.get_queryset()
+        end_date = datetime.datetime.now()
+        week_no = end_date.isocalendar()[1]
+        start_week_no = week_no - 4
+        current_year = datetime.datetime.now().year
+        date = Week(current_year, start_week_no).monday()
+        start_date = datetime.datetime.combine(date, datetime.datetime.min.time())
+        response_data = {}
+        trip_queryset = (
+            trips.filter(trip_date__range=(start_date, end_date))
+            .values("trip_date")
+            .annotate(count=Count("trip_date"))
+        )
+        for trip in trip_queryset:
+            week = trip["trip_date"].isocalendar()[1]
+            val = trip["count"]
+            week_start_date = datetime.datetime.strptime(
+                "{} {} 1".format(current_year, week-1), "%Y %W %w"
+            )
+            week_end_date = week_start_date + datetime.timedelta(days=6)
+            week_start_date_formatted = week_start_date.strftime("%b %d")
+            week_end_date_formatted = week_end_date.strftime("%b %d")
+            week_formatted = week_start_date_formatted + " - " + week_end_date_formatted
+            response_data[week_formatted] = response_data.get(week_formatted, 0) + val
+
+        return Response(response_data)
