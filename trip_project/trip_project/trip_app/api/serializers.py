@@ -5,7 +5,14 @@ from trip_project.trip_app.models import User, Trips
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ('first_name','last_name','email','mobile','profile_image')
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        # fields = "__all__"
+        fields = ('first_name','last_name','email','mobile')
 
 class TripSerializer(serializers.ModelSerializer):
     class Meta:
