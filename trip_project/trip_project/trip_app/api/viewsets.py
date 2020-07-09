@@ -2,23 +2,19 @@ import datetime
 from isoweek import Week
 from django.db.models import Count
 from rest_framework import status,viewsets
+from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth import authenticate, get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
-from trip_project.trip_app.models import User
-from trip_project.trip_app.api.serializers import UserSerializer
+from trip_project.trip_app.models import User,Trips, TripImages
+from trip_project.trip_app.api.serializers import UserSerializer, TripImagesSerializer, TripSerializer
 from validate_email import validate_email
 
 
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.viewsets import ModelViewSet
-from trip_project.trip_app.models import User, Trips
-from trip_project.trip_app.api.serializers import UserSerializer, TripSerializer
-
-
 from trip_project.trip_app.api.BaseViewset import BaseFilterablePaginatedViewset
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -190,3 +186,34 @@ class TripViewSet(BaseFilterablePaginatedViewset):
             response_data[week_formatted] = response_data.get(week_formatted, 0) + val
 
         return Response(response_data)
+
+class TripImagesViewSet(viewsets.ViewSet):
+    queryset = TripImages.objects.all()
+    serializer_class = TripImagesSerializer
+    parser_classes = (MultiPartParser, FormParser,)
+
+    @action(methods=["post"], detail=False)
+    def perform_create(self, serializer):
+        if self.request.method == "POST":
+            from_location = self.request.data['from_location']
+            to_location = self.request.data['to_location']
+            trip_date = self.request.data['trip_date']
+            trip = Trips.objects.get(from_location = from_location,to_location=to_location,trip_date__startswith=trip_date)
+            for image in self.request.data.getlist('files'):
+                record = TripImages.objects.create(images=image,trip = trip)
+                record.save()
+            return Response({'message':'success'})
+
+
+    @action(methods=["post"], detail=False)
+    def get_images(self, serializer):
+        if self.request.method == "POST":
+            from_location = self.request.data['from_location']
+            to_location = self.request.data['to_location']
+            trip_date = self.request.data['trip_date']
+            trip = Trips.objects.get(from_location = from_location,to_location=to_location,trip_date__startswith=trip_date)
+            print("!!!!!!!!!!11",trip)
+            images = TripImages.objects.filter(trip = trip)
+            print(images)
+            serializer = TripImagesSerializer(images, many = True)
+            return Response(serializer.data)

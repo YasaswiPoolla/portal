@@ -47,3 +47,7 @@ class Locations(models.Model):
 
     
     
+class TripImages(models.Model):
+    images_sqn = models.BigAutoField(primary_key=True)
+    images = models.FileField(blank=True, null=True,upload_to='memories')
+    trip = models.ForeignKey(Trips, on_delete=models.PROTECT, db_column="trip_sqn")
