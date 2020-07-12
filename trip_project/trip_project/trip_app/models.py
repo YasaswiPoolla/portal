@@ -42,6 +42,7 @@ class Locations(models.Model):
     location_sqn = models.BigAutoField(primary_key=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    created_date = models.DateTimeField(db_column="at_location", auto_now_add=True,null=True,blank=True)
     location_name = models.CharField(max_length=50, db_column="locationname")
     trip = models.ForeignKey(Trips, on_delete=models.PROTECT, db_column="trip_sqn")
 

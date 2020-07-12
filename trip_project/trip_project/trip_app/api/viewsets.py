@@ -85,7 +85,6 @@ class AuthenticationViewset(viewsets.ViewSet):
         try:
 
             authenticated_user = authenticate(email=username, password=password)
-            print("!!!",authenticated_user)
             user = User.objects.get(email=username)
 
             if authenticated_user:
@@ -122,7 +121,6 @@ class FileUploadViewSet(viewsets.ViewSet):
 
     @action(methods=["post"], detail=False)
     def perform_create(self, serializer):
-        print(self.request.data)
         user = self.request.user
         user.profile_image = self.request.data.get('datafile')
         user.save()
@@ -212,8 +210,6 @@ class TripImagesViewSet(viewsets.ViewSet):
             to_location = self.request.data['to_location']
             trip_date = self.request.data['trip_date']
             trip = Trips.objects.get(from_location = from_location,to_location=to_location,trip_date__startswith=trip_date)
-            print("!!!!!!!!!!11",trip)
             images = TripImages.objects.filter(trip = trip)
-            print(images)
             serializer = TripImagesSerializer(images, many = True)
             return Response(serializer.data)
